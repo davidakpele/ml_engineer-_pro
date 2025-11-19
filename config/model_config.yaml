@@ -1,0 +1,32 @@
+model:
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 10
+    min_samples_leaf: 4
+    max_features: 'sqrt'
+    bootstrap: true
+  gradient_boosting:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+
+training:
+  test_size: 0.2
+  random_state: 42
+  cv_folds: 5
+
+feature_selection:
+  method: 'embedded'
+  k_features: 15
+
+data_preprocessing:
+  missing_data_strategy: 'median'
+  imbalance_handling: 'none'  # Use 'none' to avoid imblearn issues

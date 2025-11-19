@@ -1,0 +1,34 @@
+# Virtual environment
+venv/
+.env
+*.pyc
+__pycache__/
+*.log
+mlruns/
+models/*.pkl
+.DS_Store
+.ipynb_checkpoints/
+
+# Data files
+data/processed/
+data/external/
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+
+# MLflow
+mlruns/
+
+# Jupyter
+*.ipynb
+
+# Temporary files
+tmp/
+temp/
