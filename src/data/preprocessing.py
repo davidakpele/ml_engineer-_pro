@@ -7,8 +7,6 @@ from typing import Tuple, Optional
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Check if imblearn is available and working
 try:
     from imblearn.over_sampling import SMOTE
     from imblearn.under_sampling import RandomUnderSampler
@@ -34,8 +32,6 @@ class DataPreprocessor:
         
         numerical_cols = df_clean.select_dtypes(include=[np.number]).columns
         categorical_cols = df_clean.select_dtypes(include=['object']).columns
-        
-        # Numerical imputation
         if strategy == 'remove':
             df_clean = df_clean.dropna(subset=numerical_cols)
         elif strategy == 'knn':
@@ -44,8 +40,7 @@ class DataPreprocessor:
         else:
             self.imputer = SimpleImputer(strategy=strategy)
             df_clean[numerical_cols] = self.imputer.fit_transform(df_clean[numerical_cols])
-        
-        # Categorical imputation
+
         df_clean[categorical_cols] = df_clean[categorical_cols].fillna('missing')
         
         logger.info(f"Handled missing data using {strategy} strategy")
@@ -58,7 +53,6 @@ class DataPreprocessor:
             
         if not IMBLEARN_AVAILABLE:
             logger.warning("imblearn not available, using basic undersampling")
-            # Basic undersampling implementation
             from collections import Counter
             counter = Counter(y)
             min_count = min(counter.values())
@@ -74,7 +68,6 @@ class DataPreprocessor:
             logger.info("Applied basic undersampling for imbalance handling")
             return X_resampled, y_resampled
         
-        # Use imblearn if available
         try:
             if method == 'smote':
                 smote = SMOTE(random_state=42)
@@ -97,13 +90,11 @@ class DataPreprocessor:
         categorical_cols = df_encoded.select_dtypes(include=['object']).columns
         
         for col in categorical_cols:
-            if df_encoded[col].nunique() <= 10:  # Low cardinality
+            if df_encoded[col].nunique() <= 10: 
                 self.label_encoders[col] = LabelEncoder()
                 df_encoded[col] = self.label_encoders[col].fit_transform(df_encoded[col].astype(str))
-            else:  # High cardinality - use one-hot for top categories
                 top_categories = df_encoded[col].value_counts().head(10).index
                 df_encoded[col] = df_encoded[col].apply(lambda x: x if x in top_categories else 'other')
-                # Use one-hot encoding for high cardinality
                 dummies = pd.get_dummies(df_encoded[col], prefix=col)
                 df_encoded = pd.concat([df_encoded, dummies], axis=1)
                 df_encoded = df_encoded.drop(columns=[col])
@@ -114,31 +105,24 @@ class DataPreprocessor:
         """Complete data preparation pipeline"""
         logger.info("Starting data preparation pipeline")
         
-        # Handle missing data
         strategy = self.config.get('data_preprocessing', {}).get('missing_data_strategy', 'median')
         df_clean = self.handle_missing_data(df, strategy)
-        
-        # Encode categorical features
+
         df_encoded = self.encode_categorical_features(df_clean)
         
-        # Separate features and target
         if target_col not in df_encoded.columns:
             raise ValueError(f"Target column '{target_col}' not found in data")
             
         X = df_encoded.drop(columns=[target_col])
         y = df_encoded[target_col]
-        
-        # Handle imbalanced data if needed
+    
         imbalance_method = self.config.get('data_preprocessing', {}).get('imbalance_handling', 'none')
         if imbalance_method != 'none':
             X, y = self.handle_imbalanced_data(X, y, imbalance_method)
         
-        # Split data
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, random_state=42, stratify=y
         )
-        
-        # Scale features
         self.scaler = StandardScaler()
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)

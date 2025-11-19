@@ -15,7 +15,6 @@ services:
       - ../data:/app/data
     restart: unless-stopped
 
-  # Optional: Add monitoring stack
   prometheus:
     image: prom/prometheus:latest
     ports:

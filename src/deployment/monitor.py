@@ -28,35 +28,30 @@ class ModelMonitor:
         if self.reference_data is None:
             raise ValueError("Reference data not set")
         
-        # Create bins based on reference data
         ref_series = self.reference_data[feature].dropna()
         curr_series = current_data[feature].dropna()
         
         if len(ref_series) == 0 or len(curr_series) == 0:
             return 0.0
         
-        # Create bins
         bins = np.histogram_bin_edges(ref_series, bins=10)
         
-        # Calculate distributions
         ref_dist, _ = np.histogram(ref_series, bins=bins)
         curr_dist, _ = np.histogram(curr_series, bins=bins)
         
-        # Convert to percentages
         ref_dist = ref_dist / len(ref_series)
         curr_dist = curr_dist / len(curr_series)
-        
-        # Calculate PSI
+ 
         psi = 0
         for i in range(len(ref_dist)):
             if ref_dist[i] == 0:
-                ref_dist[i] = 0.0001  # Avoid division by zero
+                ref_dist[i] = 0.0001  
             if curr_dist[i] == 0:
                 curr_dist[i] = 0.0001
                 
             psi += (curr_dist[i] - ref_dist[i]) * np.log(curr_dist[i] / ref_dist[i])
         
-        return float(psi)  # Convert to Python float
+        return float(psi)  
     
     def detect_data_drift(self, current_data: pd.DataFrame) -> Dict[str, Any]:
         """Detect data drift using multiple statistical tests"""
@@ -74,13 +69,11 @@ class ModelMonitor:
         drifted_features = []
         for feature in numerical_features:
             if feature in self.reference_data.columns:
-                # KS test for distribution change
                 ks_stat, ks_pvalue = ks_2samp(
                     self.reference_data[feature].dropna(),
                     current_data[feature].dropna()
                 )
-                
-                # PSI calculation
+
                 psi = self.calculate_psi(current_data, feature)
                 
                 feature_drifted = psi > self.drift_threshold or ks_pvalue < 0.05
@@ -89,17 +82,16 @@ class ModelMonitor:
                     'ks_statistic': float(ks_stat),
                     'ks_pvalue': float(ks_pvalue),
                     'psi': float(psi),
-                    'drift_detected': bool(feature_drifted)  # Convert to Python bool
+                    'drift_detected': bool(feature_drifted)  
                 }
                 
                 if feature_drifted:
                     drifted_features.append(feature)
         
-        drift_report['overall_drift_detected'] = bool(len(drifted_features) > 0)  # Convert to Python bool
+        drift_report['overall_drift_detected'] = bool(len(drifted_features) > 0)  
         drift_report['drifted_features'] = drifted_features
         drift_report['drift_ratio'] = float(len(drifted_features) / len(numerical_features) if len(numerical_features) > 0 else 0.0)
         
-        # Store drift history
         self.drift_history.append(drift_report)
         
         return drift_report
@@ -118,19 +110,17 @@ class ModelMonitor:
             'sample_size': int(len(y_true))
         }
         
-        # Check for performance degradation
         if len(self.performance_history) > 0:
             current_f1 = metrics['f1_score']
             previous_f1 = self.performance_history[-1]['f1_score']
-            metrics['f1_degradation'] = bool(current_f1 < previous_f1 * 0.95)  # Convert to Python bool
+            metrics['f1_degradation'] = bool(current_f1 < previous_f1 * 0.95) 
             metrics['f1_change'] = float(current_f1 - previous_f1)
         else:
             metrics['f1_degradation'] = False
             metrics['f1_change'] = 0.0
         
         self.performance_history.append(metrics)
-        
-        # Save performance history
+
         self._save_performance_history()
         
         return metrics
@@ -152,8 +142,7 @@ class ModelMonitor:
         
         if y_true is not None and y_pred is not None:
             report['performance'] = self.monitor_performance(y_true, y_pred, model_version)
-        
-        # Save report
+
         self._save_monitoring_report(report)
         
         logger.info(f"Monitoring report generated for {model_version}")
@@ -163,8 +152,7 @@ class ModelMonitor:
         """Check data quality issues"""
         if data is None:
             return {}
-            
-        # Convert numpy types to Python native types for JSON serialization
+        
         missing_values = {str(k): int(v) for k, v in data.isnull().sum().to_dict().items()}
         data_types = {str(k): str(v) for k, v in data.dtypes.astype(str).to_dict().items()}
         outliers = {str(k): int(v) for k, v in self.detect_outliers(data).items()}
@@ -194,7 +182,7 @@ class ModelMonitor:
             upper_bound = Q3 + 1.5 * IQR
             
             outlier_count = ((data[col] < lower_bound) | (data[col] > upper_bound)).sum()
-            outliers[str(col)] = int(outlier_count)  # Convert to Python int
+            outliers[str(col)] = int(outlier_count) 
         
         return outliers
     

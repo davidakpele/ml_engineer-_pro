@@ -47,12 +47,10 @@ class ModelEvaluator:
         cm = confusion_matrix(y_true, y_pred)
         plt.figure(figsize=(8, 6))
         
-        # Create basic heatmap without seaborn
         plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
         plt.title(f'Confusion Matrix - {model_name}')
         plt.colorbar()
         
-        # Add text annotations
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 plt.text(j, i, str(cm[i, j]), ha='center', va='center')

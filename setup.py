@@ -5,7 +5,6 @@ setup(
     version="1.0.0",
     packages=find_packages(),
     install_requires=[
-        # Dependencies are in requirements.txt
     ],
     author="ML Engineer",
     description="Complete ML Engineer Portfolio Project",

@@ -70,11 +70,7 @@ class ModelTrainer:
     
     def train_models(self, X_train, y_train, X_test, y_test) -> Dict[str, Any]:
         """Train multiple models with proper validation"""
-        
-        # Create models directory
         os.makedirs('models', exist_ok=True)
-        
-        # Start MLflow experiment
         mlflow.set_experiment(self.mlflow_experiment)
         
         overfitting_config = self.prevent_overfitting_setup()
@@ -89,18 +85,14 @@ class ModelTrainer:
         
         for model_name, model in models.items():
             with mlflow.start_run(run_name=model_name):
-                # Train model
                 model.fit(X_train, y_train)
                 
-                # Cross-validation
                 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
                 cv_scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='f1_macro')
                 
-                # Predictions
                 y_pred = model.predict(X_test)
                 y_pred_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
-                
-                # Calculate metrics
+  
                 metrics = {
                     'accuracy': accuracy_score(y_test, y_pred),
                     'precision': precision_score(y_test, y_pred, average='macro', zero_division=0),
@@ -113,12 +105,10 @@ class ModelTrainer:
                 if y_pred_proba is not None:
                     metrics['roc_auc'] = roc_auc_score(y_test, y_pred_proba)
                 
-                # Log to MLflow
                 mlflow.log_params(model.get_params())
                 mlflow.log_metrics(metrics)
                 mlflow.sklearn.log_model(model, model_name)
                 
-                # Save model locally
                 model_path = f'models/{model_name}.pkl'
                 with open(model_path, 'wb') as f:
                     pickle.dump(model, f)
@@ -128,11 +118,9 @@ class ModelTrainer:
                 
                 logger.info(f"Trained {model_name} - CV F1: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
         
-        # Select best model based on CV score
         self.best_model_name = max(results, key=lambda x: results[x]['cv_mean'])
         self.best_model = self.models[self.best_model_name]
         
-        # Save best model info
         best_model_info = {
             'model_name': self.best_model_name,
             'metrics': results[self.best_model_name],

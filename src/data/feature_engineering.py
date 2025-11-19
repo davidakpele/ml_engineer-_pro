@@ -19,17 +19,14 @@ class FeatureEngineer:
     def create_interaction_features(self, df: pd.DataFrame, top_k: int = 3) -> pd.DataFrame:
         """Create interaction features between important variables"""
         df_engineered = df.copy()
-        
-        # Example: Create interaction features for numerical columns
         numerical_cols = df.select_dtypes(include=[np.number]).columns
         
         if len(numerical_cols) >= 2:
-            # Use first top_k features for interactions to avoid explosion
             for i, col1 in enumerate(numerical_cols[:top_k]):
                 for col2 in numerical_cols[i+1:top_k]:
                     if col1 != col2:
                         df_engineered[f'{col1}_x_{col2}'] = df_engineered[col1] * df_engineered[col2]
-                        df_engineered[f'{col1}_div_{col2}'] = df_engineered[col1] / (df_engineered[col2] + 1e-8)  # avoid division by zero
+                        df_engineered[f'{col1}_div_{col2}'] = df_engineered[col1] / (df_engineered[col2] + 1e-8)  
         
         logger.info(f"Created interaction features")
         return df_engineered
@@ -67,12 +64,10 @@ class FeatureEngineer:
             'importance': model.feature_importances_
         }).sort_values('importance', ascending=False)
         
-        # Select features above threshold
         self.selected_features = feature_importance[
             feature_importance['importance'] > threshold
         ]['feature'].tolist()
-        
-        # Ensure we have at least some features
+
         if not self.selected_features:
             self.selected_features = feature_importance.head(5)['feature'].tolist()
         
@@ -81,15 +76,11 @@ class FeatureEngineer:
     
     def get_feature_importance(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         """Get feature importance from multiple methods"""
-        # Random Forest importance
         rf = RandomForestClassifier(n_estimators=100, random_state=42)
         rf.fit(X, y)
         rf_importance = rf.feature_importances_
         
-        # Mutual information
         mi_scores = mutual_info_classif(X, y, random_state=42)
-        
-        # Create results dataframe
         importance_df = pd.DataFrame({
             'feature': X.columns,
             'random_forest_importance': rf_importance,

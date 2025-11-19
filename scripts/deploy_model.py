@@ -6,13 +6,11 @@ import sys
 import os
 import uvicorn
 
-# Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.utils.config import config
 from src.utils.logger import setup_logger
 
-# Setup logging
 logger = setup_logger(__name__)
 
 def deploy_api():

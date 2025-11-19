@@ -9,10 +9,8 @@ from prometheus_client import Counter, Histogram, generate_latest, REGISTRY
 from src.models.predict import ModelPredictor
 from src.utils.logger import setup_logger
 
-# Setup logging
 logger = setup_logger(__name__)
 
-# Monitoring metrics
 PREDICTION_COUNTER = Counter('model_predictions_total', 'Total predictions', ['model', 'status'])
 PREDICTION_DURATION = Histogram('prediction_duration_seconds', 'Prediction latency')
 
@@ -32,7 +30,6 @@ class PredictionResponse(BaseModel):
     model_version: str
     status: str
 
-# Initialize model predictor
 predictor = ModelPredictor()
 
 @app.on_event("startup")
@@ -59,11 +56,8 @@ async def predict(request: PredictionRequest):
     start_time = time.time()
     try:
         PREDICTION_COUNTER.labels(model=request.model_version, status='requested').inc()
-        
-        # Make prediction
         result = predictor.predict(request.features, request.model_version)
         
-        # Record success
         PREDICTION_COUNTER.labels(model=result['model_used'], status='success').inc()
         PREDICTION_DURATION.observe(time.time() - start_time)
         
@@ -75,7 +69,6 @@ async def predict(request: PredictionRequest):
         )
     
     except Exception as e:
-        # Record error
         PREDICTION_COUNTER.labels(model=request.model_version, status='error').inc()
         PREDICTION_DURATION.observe(time.time() - start_time)
         logger.error(f"Prediction error: {str(e)}")

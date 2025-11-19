@@ -28,8 +28,6 @@ class ModelPredictor:
                         self.models[model_name] = pickle.load(f)
             
             logger.info(f"Loaded {len(self.models)} models")
-            
-            # Detect the actual feature count from the models
             self._detect_feature_count()
             
         else:
@@ -39,21 +37,17 @@ class ModelPredictor:
         """Detect how many features the models actually expect"""
         if not self.models:
             return
-            
-        # Try to get feature count from first model
+
         first_model = list(self.models.values())[0]
         
         if hasattr(first_model, 'n_features_in_'):
-            # Most scikit-learn models have this attribute
             self.expected_features = first_model.n_features_in_
             logger.info(f"Detected models expect {self.expected_features} features")
         elif hasattr(first_model, 'n_features_'):
-            # Some models use this attribute
             self.expected_features = first_model.n_features_
             logger.info(f"Detected models expect {self.expected_features} features")
         else:
-            # Fallback: try to infer from model parameters or use default
-            self.expected_features = 5  # Based on the error message
+            self.expected_features = 5 
             logger.warning(f"Could not detect feature count, using default: {self.expected_features}")
     
     def predict(self, features: List[float], model_name: str = "best") -> Dict[str, Any]:
@@ -64,12 +58,10 @@ class ModelPredictor:
         if self.expected_features is None:
             raise ValueError("Feature count not detected from models")
         
-        # Validate that we have the correct number of features
         if len(features) != self.expected_features:
             raise ValueError(f"Feature shape mismatch. Expected: {self.expected_features}, Got: {len(features)}. Please provide exactly {self.expected_features} features.")
         
         if model_name == "best":
-            # Try to load best model info
             try:
                 import json
                 with open('models/best_model_info.json', 'r') as f:

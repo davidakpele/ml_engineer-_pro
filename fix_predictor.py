@@ -76,14 +76,13 @@ class ModelPredictor:
 
 with open('src/models/predict.py', 'w') as f:
     f.write(predictor_code)
-print("✅ Fixed predictor with feature validation")
+print("Fixed predictor with feature validation")
 
-# Also update the API to add features endpoint
+
 import re
 with open('src/deployment/api.py', 'r') as f:
     api_content = f.read()
 
-# Add features endpoint before the metrics endpoint
 if '@app.get("/features")' not in api_content:
     features_endpoint = '''
 @app.get("/features")
@@ -94,9 +93,8 @@ async def get_expected_features():
         "message": f"Send exactly {predictor.get_expected_features()} features in the 'features' array for predictions"
     }
 '''
-    # Insert before metrics endpoint
     api_content = api_content.replace('@app.get("/metrics")', features_endpoint + '\n@app.get("/metrics")')
     
     with open('src/deployment/api.py', 'w') as f:
         f.write(api_content)
-    print("✅ Added features endpoint to API")
+    print("Added features endpoint to API")

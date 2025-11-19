@@ -25,6 +25,4 @@ class Config:
     
     def get_api_config(self) -> Dict[str, Any]:
         return self.api_config
-
-# Global config instance
 config = Config()
